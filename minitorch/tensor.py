@@ -285,3 +285,63 @@ class Tensor:
 
     # Functions
     # TODO: Implement for Task 2.3.
+    def __add__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self, self._ensure_tensor(b))
+
+    def __sub__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self, Neg.apply(self._ensure_tensor(b)))
+
+    def __mul__(self, b: TensorLike) -> Tensor:
+        return Mul.apply(self, self._ensure_tensor(b))
+
+    def __lt__(self, b: TensorLike) -> Tensor:
+        return LT.apply(self, self._ensure_tensor(b))
+
+    def __eq__(self, b: TensorLike) -> Tensor:
+        return EQ.apply(self, self._ensure_tensor(b))
+
+    def __gt__(self, b: TensorLike) -> Tensor:
+        return LT.apply(self._ensure_tensor(b), self)
+
+    def __neg__(self) -> Tensor:
+        return Neg.apply(self)
+
+    # for commutative operations
+    def __radd__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self._ensure_tensor(b), self)
+
+    def __rmul__(self, b: TensorLike) -> Tensor:
+        return Mul.apply(self._ensure_tensor(b), self)
+
+    def __all__(self, dim: Optional[Tensor] = None) -> Tensor:
+        return All.apply(self, dim)
+
+    def __is_close__(self, b: TensorLike, atol: float = 1e-8) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(b), atol)
+
+    def sigmoid(self) -> Tensor:
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Tensor:
+        return ReLU.apply(self)
+
+    def log(self) -> Tensor:
+        return Log.apply(self)
+
+    def exp(self) -> Tensor:
+        return Exp.apply(self)
+
+    def sum(self, dim: int) -> Tensor:
+        return Sum.apply(self, dim)
+
+    def mean(self, dim: int) -> Tensor:
+        return Sum.apply(self, dim) / self.shape[dim]
+
+    def permute(self, dims: Tuple[int]) -> Tensor:
+        return Permute.apply(self, dims)
+
+    def view(self, shape: UserShape) -> Tensor:
+        return View.apply(self, shape)
+
+    def zero_grad(self) -> None:
+        self.grad = None
