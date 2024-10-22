@@ -285,6 +285,15 @@ class Tensor:
 
     # Functions
     # TODO: Implement for Task 2.3.
+    # add in a size function
+    @property
+    def size(self) -> int:
+        """Returnsz
+        size of the tensor
+
+        """
+        return self._tensor.size
+
     def __add__(self, b: TensorLike) -> Tensor:
         return Add.apply(self, self._ensure_tensor(b))
 
@@ -313,11 +322,24 @@ class Tensor:
     def __rmul__(self, b: TensorLike) -> Tensor:
         return Mul.apply(self._ensure_tensor(b), self)
 
-    def __all__(self, dim: Optional[Tensor] = None) -> Tensor:
-        return All.apply(self, dim)
+    def all(self, dim: Optional[int] = None) -> Tensor:
+        if dim is None:
+            # if dim is none, we base it off of the All() implementation,
+            # and call mul_reduce on the flattened, 1D tensor.
+            # we need to do this because the provide All() implementation
+            # does not have dim as an optional argument.
+            # NOTE: because we are calling mul_reduce on the flattened tensor
+            # directly, we do not pass in dim as a tensor.
+            return self.f.mul_reduce(
+                self.contiguous().view(int(operators.prod(self.shape))), 0
+            )
+        else:
+            # if dim is not None, then we call All() on the tensor with the
+            # specified dimension. the All() implementation will call mul_reduce
+            return All.apply(self, self._ensure_tensor(dim))
 
-    def __is_close__(self, b: TensorLike, atol: float = 1e-8) -> Tensor:
-        return IsClose.apply(self, self._ensure_tensor(b), atol)
+    def is_close(self, b: TensorLike) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(b))
 
     def sigmoid(self) -> Tensor:
         return Sigmoid.apply(self)
@@ -331,17 +353,36 @@ class Tensor:
     def exp(self) -> Tensor:
         return Exp.apply(self)
 
-    def sum(self, dim: int) -> Tensor:
-        return Sum.apply(self, dim)
+    def sum(self, dim: Optional[int] = None) -> Tensor:
+        # if dim is None:
+        #     # sum over all dimensions
+        #     return Sum.apply(self)
+        # else:
+        #     # this is taken from Ed
+        #     return Sum.apply(self, Tensor.make([dim], (1,), backend=self.backend))
 
-    def mean(self, dim: int) -> Tensor:
-        return Sum.apply(self, dim) / self.shape[dim]
+        if dim is None:
+            return Sum.apply(
+                self.contiguous().view(self.size),
+                self._ensure_tensor(0),
+            )
+            # return Sum.apply(self)
+        else:
+            return Sum.apply(self, self._ensure_tensor(dim))
+
+    def mean(self, dim: Optional[int] = None) -> Tensor:
+        """Compute the mean of a given dimension"""
+        if dim is None:
+            return self.sum() / self.size
+        else:
+            return self.sum(dim) / self.shape[dim]
 
     def permute(self, dims: Tuple[int]) -> Tensor:
         return Permute.apply(self, dims)
 
     def view(self, shape: UserShape) -> Tensor:
-        return View.apply(self, shape)
+        """reshape the tensor"""
+        return View.apply(self, self._ensure_tensor(shape))
 
     def zero_grad(self) -> None:
         self.grad = None

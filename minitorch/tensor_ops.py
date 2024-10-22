@@ -277,32 +277,25 @@ def tensor_map(
             + str(np.prod(out_shape))
         )
 
-        # simple case: when shape is the same,
-        # we can simply apply the function to very element in the storage
-        if in_shape == out_shape:
-            for i in range(len(in_storage)):
-                out[i] = fn(in_storage[i])
-        else:
-            # broadcasted case: if we assume out_shape and in_shape broadcast,
-            # then we can get every element in out_shape from the in_shape.
-            # to do this, we start with the in_shape. Then for each
-            # element in `out`, which is the 1D array of out_shape,
-            # we get the corresponding index in `in_storage`, the 1D array
-            # of in_shape. Then we apply the function to the element at the
-            # # index in the in_storage and save it to the out.
-
-            # for each element in the 1D array of out_shape (i.e. = size)
-            for i in range(len(out)):
-                # get the index in the out_shape
-                to_index(i, out_shape, out_index)
-                # get the index in the in_shape (which is SMALLER)
-                broadcast_index(out_index, out_shape, in_shape, in_index)
-                # get the position in the in_storage
-                in_position = index_to_position(in_index, in_strides)
-                # get the position in the out storage. i.e. where to store
-                out_position = index_to_position(out_index, out_strides)
-                # apply the function to the in_storage and save it to the out
-                out[out_position] = fn(in_storage[in_position])
+        # broadcasted case: if we assume out_shape and in_shape broadcast,
+        # then we can get every element in out_shape from the in_shape.
+        # to do this, we start with the in_shape. Then for each
+        # element in `out`, which is the 1D array of out_shape,
+        # we get the corresponding index in `in_storage`, the 1D array
+        # of in_shape. Then we apply the function to the element at the
+        # # index in the in_storage and save it to the out.
+        # for each element in the 1D array of out_shape (i.e. = size)
+        for i in range(len(out)):
+            # get the index in the out_shape
+            to_index(i, out_shape, out_index)
+            # get the index in the in_shape (which is SMALLER)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            # get the position in the in_storage
+            in_position = index_to_position(in_index, in_strides)
+            # get the position in the out storage. i.e. where to store
+            out_position = index_to_position(out_index, out_strides)
+            # apply the function to the in_storage and save it to the out
+            out[out_position] = fn(in_storage[in_position])
 
     return _map
 

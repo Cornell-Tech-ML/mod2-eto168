@@ -139,8 +139,14 @@ class Exp(Function):
 
 class Sum(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, dim: int) -> Tensor:
-        return t1.f.sum_reduce(t1, dim)
+    def forward(ctx: Context, t1: Tensor, dim: Tensor) -> Tensor:
+        # follow the scheme of All
+        if dim is not None:
+            return t1.f.add_reduce(t1, int(dim.item()))
+        else:
+            return t1.f.add_reduce(
+                t1.contiguous().view(int(operators.prod(t1.shape))), 0
+            )
 
 
 class LT(Function):
@@ -157,14 +163,17 @@ class EQ(Function):
 
 class IsClose(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, t2: Tensor, atol: float) -> Tensor:
-        return t1.f.isclose_zip(t1, t2, atol)
+    def forward(ctx: Context, t1: Tensor, t2: Tensor) -> Tensor:
+        return t1.f.is_close_zip(t1, t2)
 
 
 class Permute(Function):
     @staticmethod
     def forward(ctx: Context, t1: Tensor, dims: Tuple[int]) -> Tensor:
-        return t1.f.permute(t1, dims)
+        """Permute the dimensions of a tensor."""
+        # note, we use t1._tensor because _tensor is TensorData,
+        # which is where we implemented permute
+        return t1._tensor.permute(*dims)
 
 
 # Done TODO:2.3
