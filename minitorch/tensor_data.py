@@ -133,7 +133,7 @@ def broadcast_index(
     # we do this because the smaller shape dictates.
     # note, we again do reverse iteration.
     for dimension in range(len(shape) - 1, -1, -1):
-        print(dimension)
+        # print(dimension)
         # here, we implement rule 1. If the dimension in the smaller shape
         # is 1, then this dimension in the smaller shape is copied n times.
         # it is "stretched" to match that of the larger shape.
@@ -175,8 +175,8 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     shape1_dims = len(shape1)
     shape2_dims = len(shape2)
 
-    print("shape1_dims", shape1_dims)
-    print("shape2_dims", shape2_dims)
+    # print("shape1_dims", shape1_dims)
+    # print("shape2_dims", shape2_dims)
 
     # we iterate using the largest tensor
     if shape1_dims > shape2_dims:
@@ -190,16 +190,16 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     # again, reverse iterate, starting from the rightmost dimension.
     # that is, if shape is (1, 2, 3), we start at 3, 2, then 1.
     for dimension in range(len(big_tensor) - 1, -1, -1):
-        print("Dimension", dimension)
+        # print("Dimension", dimension)
 
         # here, we iterate. When we iterate more dimensions than the smaller
         # tensor, then we just take the shape of the bigger tensor.
         num_dims_iterated += 1
-        print("num_dims_iterated", num_dims_iterated)
+        # print("num_dims_iterated", num_dims_iterated)
 
         # shift the index of the smaller tensor
         small_tensor_index = dimension - (len(big_tensor) - len(small_tensor))
-        print("small_tensor_index", small_tensor_index)
+        # print("small_tensor_index", small_tensor_index)
 
         # print("dimension + 1", dimension + 1)
         # print("len(small_tensor) - 1", len(small_tensor) - 1)
@@ -209,9 +209,9 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
             # shape 1 for the smaller tensor. This is equivalent to taking the
             # shape of the bigger tensor.
 
-            print("big_tensor[dimension]", big_tensor[dimension])
+            # print("big_tensor[dimension]", big_tensor[dimension])
             new_shape.append(big_tensor[dimension])
-            print("new_shape", new_shape)
+            # print("new_shape", new_shape)
             continue
 
         # can't broadcast condition
@@ -233,7 +233,7 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         elif big_tensor[dimension] == small_tensor[small_tensor_index]:
             new_shape.append(big_tensor[dimension])
 
-        print("new_shape", new_shape)
+        # print("new_shape", new_shape)
 
     return tuple(reversed(new_shape))
 
