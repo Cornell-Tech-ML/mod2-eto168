@@ -318,15 +318,35 @@ class IsClose(Function):
 
 class Permute(Function):
     @staticmethod
-    def forward(ctx: Context, t1: Tensor, dims: Tuple[int]) -> Tensor:
+    def forward(ctx: Context, t1: Tensor, dims: Tensor) -> Tensor:
         """Permute the dimensions of a tensor."""
         # note, we use t1._tensor because _tensor is TensorData,
         # which is where we implemented permute
-        return t1._tensor.permute(*dims)
+
+        # dims: Tensor is a tensor of integers that specify the new order
+        # we cannot pass this into permute as it takes integers
+        # thus, we need to convert _storage into a list of integers
+        dims_as_integer = []
+        for i in dims._tensor._storage:
+            dims_as_integer.append(int(i))
+
+        # int_order = [int(x) for x in dims._tensor._storage]
+        ctx.save_for_backward(dims_as_integer)
+
+        # a._new creates a new tensor with the same backend as `a`
+        return t1._new(t1._tensor.permute(*dims_as_integer))
 
     def backward(ctx: Context, grad_output: Tensor) -> Tuple[Tensor]:
-        # why?
-        return (grad_output.permute(*[i for i in range(grad_output.dims)]),)
+        """Permute the gradients back to the original order."""
+        (dims_as_integer,) = ctx.saved_values
+
+        # since dims_as_integer was the order that we permuted the tensor INTO
+        # we need to permute the gradient back to the original order
+        reverse_dim_dict = {v: i for i, v in enumerate(dims_as_integer)}
+        reverse_dims = [reverse_dim_dict[i] for i in range(len(dims_as_integer))]
+
+        # return 0 for dims as given on Ed
+        return grad_output._new(grad_output._tensor.permute(*reverse_dims)), 0.0
 
 
 # Done TODO:2.3

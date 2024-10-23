@@ -377,12 +377,15 @@ class Tensor:
         else:
             return self.sum(dim) / self.shape[dim]
 
-    def permute(self, dims: Tuple[int]) -> Tensor:
-        return Permute.apply(self, self._ensure_tensor(dims))
+    def permute(self, *dims: int) -> Tensor:
+        # here, we save the dims as a tensor
+        return Permute.apply(self, tensor(list(dims)))
 
-    def view(self, shape: UserShape) -> Tensor:
+    def view(self, *shape: int) -> Tensor:
         """reshape the tensor"""
-        return View.apply(self, self._ensure_tensor(shape))
+        # make shape a tensor because class View() takes shape as a tensor
+        tensor_shape = tensor(list(shape))
+        return View.apply(self, tensor_shape)
 
     def zero_grad_(self) -> None:
         self.grad = None
