@@ -285,3 +285,107 @@ class Tensor:
 
     # Functions
     # TODO: Implement for Task 2.3.
+    # add in a size function
+    @property
+    def size(self) -> int:
+        """Returnsz
+        size of the tensor
+
+        """
+        return self._tensor.size
+
+    def __add__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self, self._ensure_tensor(b))
+
+    def __sub__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self, Neg.apply(self._ensure_tensor(b)))
+
+    def __mul__(self, b: TensorLike) -> Tensor:
+        return Mul.apply(self, self._ensure_tensor(b))
+
+    def __lt__(self, b: TensorLike) -> Tensor:
+        return LT.apply(self, self._ensure_tensor(b))
+
+    def __eq__(self, b: TensorLike) -> Tensor:
+        return EQ.apply(self, self._ensure_tensor(b))
+
+    def __gt__(self, b: TensorLike) -> Tensor:
+        return LT.apply(self._ensure_tensor(b), self)
+
+    def __neg__(self) -> Tensor:
+        return Neg.apply(self)
+
+    # for commutative operations
+    def __radd__(self, b: TensorLike) -> Tensor:
+        return Add.apply(self._ensure_tensor(b), self)
+
+    def __rmul__(self, b: TensorLike) -> Tensor:
+        return Mul.apply(self._ensure_tensor(b), self)
+
+    def all(self, dim: Optional[int] = None) -> Tensor:
+        if dim is None:
+            # if dim is none, we base it off of the All() implementation,
+            # and call mul_reduce on the flattened, 1D tensor.
+            # we need to do this because the provide All() implementation
+            # does not have dim as an optional argument.
+            # NOTE: because we are calling mul_reduce on the flattened tensor
+            # directly, we do not pass in dim as a tensor.
+            return self.f.mul_reduce(
+                self.contiguous().view(int(operators.prod(self.shape))), 0
+            )
+        else:
+            # if dim is not None, then we call All() on the tensor with the
+            # specified dimension. the All() implementation will call mul_reduce
+            return All.apply(self, self._ensure_tensor(dim))
+
+    def is_close(self, b: TensorLike) -> Tensor:
+        return IsClose.apply(self, self._ensure_tensor(b))
+
+    def sigmoid(self) -> Tensor:
+        return Sigmoid.apply(self)
+
+    def relu(self) -> Tensor:
+        return ReLU.apply(self)
+
+    def log(self) -> Tensor:
+        return Log.apply(self)
+
+    def exp(self) -> Tensor:
+        return Exp.apply(self)
+
+    def sum(self, dim: Optional[int] = None) -> Tensor:
+        # if dim is None:
+        #     # sum over all dimensions
+        #     return Sum.apply(self)
+        # else:
+        #     # this is taken from Ed
+        #     return Sum.apply(self, Tensor.make([dim], (1,), backend=self.backend))
+
+        if dim is None:
+            return Sum.apply(
+                self.contiguous().view(self.size),
+                self._ensure_tensor(0),
+            )
+            # return Sum.apply(self)
+        else:
+            return Sum.apply(self, self._ensure_tensor(dim))
+
+    def mean(self, dim: Optional[int] = None) -> Tensor:
+        """Compute the mean of a given dimension"""
+        if dim is None:
+            return self.sum() / self.size
+        else:
+            return self.sum(dim) / self.shape[dim]
+
+    def permute(self, *dims: int) -> Tensor:
+        # here, we save the dims as a tensor
+        return Permute.apply(self, tensor(list(dims)))
+
+    def view(self, *shape: int) -> Tensor:
+        """reshape the tensor"""
+        # make shape a tensor because class View() takes shape as a tensor
+        tensor_shape = tensor(list(shape))
+        return View.apply(self, tensor_shape)
+
+    def zero_grad_(self) -> None:
+        self.grad = None
